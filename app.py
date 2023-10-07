@@ -116,7 +116,7 @@ def main():
         print(result)
         # result=predict_note_authentication(variance,skewness,curtosis,entropy)
 
-    st.success('The Pos Tags are {}'.format(result))
+    st.success("The Pos Tags are "+str(result))
 
 if __name__=='__main__':
     main()
