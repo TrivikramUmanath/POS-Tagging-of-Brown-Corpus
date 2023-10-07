@@ -100,7 +100,8 @@ def main():
 
     result=""
     if st.button("Predict"):
-        result=predict(sentence)
+        sr=sentence.split(" ")
+        result=predict(sr)
         # result=predict_note_authentication(variance,skewness,curtosis,entropy)
 
     st.success('The Pos Tags are {}'.format(result))
