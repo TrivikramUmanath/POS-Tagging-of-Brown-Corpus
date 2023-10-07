@@ -7,63 +7,86 @@ import streamlit as st
 import json
 from PIL import Image
 
-#app=Flask(__name__)
-#Swagger(app)
 
-# pickle_in = open("classifier.pkl","rb")
-# classifier=pickle.load(pickle_in)
 
-f = open ('Prior_Prob.json', "r")
-Prior_Prob = json.load(f)
-f.close()
-
-f = open ('Transition_Prob.json', "r")
-Transition_Prob = json.load(f)
-f.close()
-
-f = open ('Emission_Prob.json', "r")
-Emission_Prob = json.load(f) 
-f.close()
+tagset=np.load('Tagset.npy')
+T = np.load('Transition_Prob.npy')
+E = np.load('Emission_Prob.npy')
+tagkeys = np.load('TagKeys.npy')
+vocab_size=56057
 
 def welcome():
     return "Welcome All"
 
-def ViterbiPredict(sentenc,Prior_Prob,Emission_Prob,Transition_Prob): 
-    #Testing
-    All_Pos=list(Prior_Prob.keys())
-    sent=sentenc.lower()
-    sentence = sent.split(" ")
-    T = len(sentence)
-    State_Seq = []
-    State_Prob = {}
-    first_word = sentence[0]
-    if first_word in Emission_Prob.keys():
-        for tag in Emission_Prob[first_word].keys():
-            prob = Prior_Prob[tag] * Emission_Prob[first_word][tag]
-            State_Prob[tag] = prob
-    else:
-        for tag in Prior_Prob.keys():
-            prob = Prior_Prob[tag] * 1e-6  # Use a small positive value for unknown words
-            State_Prob[tag] = prob
-    pos = max(State_Prob, key=State_Prob.get)
-    State_Seq.append(pos)
+def ptag(word):
+    global E
+    L = []
+    check = 0
+    for i in range(len(E)):
+        if word in E[i]:
+            L.append(i)
+            check = 1
+    if check == 0:
+        L = list(tagset.values())
+        
+    return L
 
-    for word_position in range(1, T):
-        new_State_Prob = {}
-        for k in State_Prob.keys():
-            word = sentence[word_position][0]
-            prob = State_Prob[k]
-            for transit in Transition_Prob[k].keys():
-                emit_prob = Emission_Prob.get(word, {}).get(transit, 1e-6) # Use a small positive value for unknown words
-                new_prob = prob * Transition_Prob[k][transit] * emit_prob
-                if transit not in new_State_Prob.keys() or new_prob > new_State_Prob[transit]:
-                    new_State_Prob[transit] = new_prob
-        # Update State_Prob for the next word position
-        State_Prob = new_State_Prob
-        # Append most probable POS tag for the current word based on Viterbi
-        pos = max(State_Prob, key=State_Prob.get)
-        State_Seq.append(pos)
-    return State_Seq
+
+"Viterbi Algorithm"
+
+
+def Viterbi(sentence,k):
+    if k == 0:
+        word = sentence[k].lower()
+        taglist = ptag(word)
+        Prob = []
+        Label = []
+        for i in taglist:
+            if word in E[i]:
+                prob = T[0,i]*E[i][word]
+            else:
+                prob = T[0,i]/(sum(list(E[i].values()))+vocab_size)
+            Prob.append(prob)
+            Label.append(tagkeys[i])
+            
+        if k == len(sentence)-1:
+            return Label[Prob.index(max(Prob))]
+        
+        return (Prob,Label)
+           
+    word = sentence[k].lower()
+    taglist = ptag(word)
+    prevprob,prevtag = Viterbi(sentence,k-1)
+    Probj = []
+    Labelj = []
+    
+    for i in taglist:
+        maxi = 0
+        add = 0
+        for j in range(len(prevprob)):
+            A = prevprob[j]*T[tagset[prevtag[j].split("__")[-1]]+1,i]
+            if A>= maxi:
+                maxi = A
+                add = i
+                label = prevtag[j]+"__"+tagkeys[i]
+        
+        if word in E[add]:
+            Probj.append(maxi*E[add][word])
+        else:
+            Probj.append(maxi/(sum(list(E[add].values()))+vocab_size))
+#         except KeyError as ke:
+#             print('Did not encounter ', ke, ' in the training corpus.')
+        Labelj.append(label)
+        
+    if k == len(sentence)-1:
+        return Labelj[Probj.index(max(Probj))]
+    
+    return (Probj,Labelj)
+
+def predict(sentence):
+    sentence = [i.lower() for i in sentence]
+    return Viterbi(sentence,len(sentence)-1)
+
 
 def main():
     st.title("POS Tagger")
@@ -77,7 +100,7 @@ def main():
 
     result=""
     if st.button("Predict"):
-        result=ViterbiPredict(sentence,Prior_Prob,Emission_Prob,Transition_Prob)
+        result=predict(sentence)
         # result=predict_note_authentication(variance,skewness,curtosis,entropy)
 
     st.success('The Pos Tags are {}'.format(result))
