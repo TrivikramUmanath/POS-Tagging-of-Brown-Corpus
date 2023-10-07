@@ -31,7 +31,7 @@ def welcome():
 def ViterbiPredict(sentenc,Prior_Prob,Emission_Prob,Transition_Prob): 
     #Testing
     All_Pos=list(Prior_Prob.keys())
-    sentence=sentence.lower()
+    sentence=sentenc.lower()
     sentence = sentenc.split(" ")
     T = len(sentence)
     State_Seq = []
