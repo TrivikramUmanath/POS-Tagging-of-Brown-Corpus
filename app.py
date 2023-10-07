@@ -5,8 +5,7 @@ import numpy as np
 import pandas as pd
 import streamlit as st 
 import json
-from PIL import Image
-
+import string
 
 
 
@@ -36,6 +35,11 @@ def ptag(word):
 
 "Viterbi Algorithm"
 
+def preprocessing(sentence):
+    for i in string.punctuation:
+        if i in sentence:
+            sentence=sentence.replace(i," "+i)
+    return sentence
 
 def Viterbi(sentence,k):
     if k == 0:
@@ -105,7 +109,9 @@ def main():
 
     result=""
     if st.button("Predict"):
-        sr=sentence.split(" ")
+        tio=preprocessing(sentence)
+        sr=tio.split(" ")
+        print(sr)
         result=predict(sr)
         print(result)
         # result=predict_note_authentication(variance,skewness,curtosis,entropy)
