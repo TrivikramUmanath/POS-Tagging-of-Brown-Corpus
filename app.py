@@ -9,10 +9,12 @@ from PIL import Image
 
 
 
-tagset=np.load('Tagset.npy')
-T = np.load('Transition_Prob.npy')
-E = np.load('Emission_Prob.npy')
-tagkeys = np.load('TagKeys.npy')
+
+tagset={'ADJ': 0, 'ADP': 1, 'ADV': 2, 'CONJ': 3, 'DET': 4, 'NOUN': 5, 'NUM': 6, 'PRON': 7, 'PRT': 8, 'VERB': 9, 'X': 10, '.': 11}
+T = np.load('Transition_Prob.npy',allow_pickle=True)
+E = np.load('Emission_Prob.npy',allow_pickle=True)
+tagkeys = ['ADJ' ,'ADP' ,'ADV', 'CONJ', 'DET', 'NOUN', 'NUM' ,'PRON', 'PRT' ,'VERB' ,'X', '.']
+
 vocab_size=56057
 
 def welcome():
@@ -64,6 +66,9 @@ def Viterbi(sentence,k):
         maxi = 0
         add = 0
         for j in range(len(prevprob)):
+            # print(j)
+            # print(prevtag[j].split("__")[-1])
+
             A = prevprob[j]*T[tagset[prevtag[j].split("__")[-1]]+1,i]
             if A>= maxi:
                 maxi = A
@@ -102,6 +107,7 @@ def main():
     if st.button("Predict"):
         sr=sentence.split(" ")
         result=predict(sr)
+        print(result)
         # result=predict_note_authentication(variance,skewness,curtosis,entropy)
 
     st.success('The Pos Tags are {}'.format(result))
