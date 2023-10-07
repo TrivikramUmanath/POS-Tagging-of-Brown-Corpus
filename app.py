@@ -32,9 +32,6 @@ def ViterbiPredict(sentenc,Prior_Prob,Emission_Prob,Transition_Prob):
     #Testing
     All_Pos=list(Prior_Prob.keys())
     sentence = sentenc.split(" ")
-    if sentence[-1][-1]=='.':
-        sentence[-1]=sentence[:-1]
-    sentence.append('.')
     T = len(sentence)
     State_Seq = []
     State_Prob = {}
