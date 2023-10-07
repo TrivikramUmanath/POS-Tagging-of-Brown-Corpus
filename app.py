@@ -114,8 +114,8 @@ def main():
         print(sr)
         result=predict(sr)
         print(result)
-
-    st.success("The Pos Tags are :",str(result.split("__")))
+    
+    st.success(result.split("__"))
 
 if __name__=='__main__':
     main()
